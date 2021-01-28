@@ -1,6 +1,9 @@
 const python = require('lezer-python');
 
-const input = `print(1)`
+const input = `def retTrue(x:int) -> bool:
+    return True
+
+retTrue(1)`
 const tree = python.parser.parse(input);
 const cursor = tree.cursor();
 

@@ -1,14 +1,8 @@
 const python = require('lezer-python');
 
-const input = `a:int = 1
-b:int = 3
-c:int = 4
-def retTrue(x:int) -> bool:
+const input = `def retTrue(x:int) -> bool:
     return True
-
-def loop(x:int) -> bool:
-    while True:
-        print(1)
+print(1)
     `
 
 const tree = python.parser.parse(input);

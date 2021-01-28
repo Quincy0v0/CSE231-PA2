@@ -248,7 +248,6 @@ export function traverseFuncdef(c : TreeCursor, s : string) : Array<Func_def> {
       return: retType,
       body: body
     })
-    c.parent();
     if (!c.nextSibling()) {
       break
     }
