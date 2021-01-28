@@ -35,7 +35,8 @@ type CompileResult = {
 };
 
 export function compile(source: string, env: GlobalEnv) : CompileResult {
-  const ast = parse(source);
+  const prog = parse(source)
+  const ast = prog.stmt; // Program returned here
   const withDefines = augmentEnv(env, ast);
   const commandGroups = ast.map((stmt) => codeGen(stmt, withDefines));
   const commands = [].concat.apply([], commandGroups);
@@ -51,6 +52,10 @@ function envLookup(env : GlobalEnv, name : string) : number {
   return (env.globals.get(name) * 4); // 4-byte values
 }
 
+function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
+  
+}
+
 function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
   switch(stmt.tag) {
     case "define":
@@ -63,7 +68,20 @@ function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
         "(call $print)"
       ]);
     case "expr":
-      return codeGenExpr(stmt.value, env);
+      const result = codeGenExpr(stmt.value, env);
+      result.push("(local.set $scratch)");
+      return result;
+    case "globals":
+      var globalStmts : Array<string> = [];
+      env.globals.forEach((pos, name) => {
+        globalStmts.push(
+            `(i32.const ${pos})`,
+            `(i32.const ${envLookup(env, name)})`,
+            `(i32.load)`,
+            `(call $printglobal)`
+          );
+      });
+      return globalStmts;
   }
 }
 
@@ -77,6 +95,10 @@ function codeGenExpr(expr : Expr, env: GlobalEnv) : Array<string> {
       return codeGenUniOp(expr.op, expr.left, env);
     case "binop":
       return codeGenBinOp(expr.op, expr.left, expr.right, env);
+    case "call":
+      var valStmts = codeGenExpr(expr.arguments[0], env);
+      valStmts.push(`(call $${expr.name})`);
+      return valStmts;
   }
 }
 

@@ -1,3 +1,5 @@
+export type Program = { tag: "program", vardef:  Array<Var_def>, funcdef:  Array<Func_def>, stmt:  Array<Stmt>}
+
 export type Var_def = { tag: "vardef", var: Typed_var, value: Literal }
 
 export type Typed_var = { tag: "typedvar", name: string, type: Type }

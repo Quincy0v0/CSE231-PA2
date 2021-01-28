@@ -1,6 +1,6 @@
 import {parser} from "lezer-python";
 import {Tree, TreeCursor} from "lezer-tree";
-import {Var_def, Typed_var, Func_def, Func_body, Expr, Stmt, UniOp, BinOp, Literal, Type, Elif, Else} from "./ast";
+import {Program, Var_def, Typed_var, Func_def, Func_body, Expr, Stmt, UniOp, BinOp, Literal, Type, Elif, Else} from "./ast";
 
 export function getUniOp(opstr : string) : UniOp {
   switch(opstr) {
@@ -199,7 +199,9 @@ export function traverseVardef(c : TreeCursor, s : string) : Array<Var_def> {
       value: value
     })
     c.parent();
-    c.nextSibling();
+    if (!c.nextSibling()) {
+      break
+    }
   }
   return def
 }
@@ -373,29 +375,36 @@ export function traverseStmt(c : TreeCursor, s : string) : Stmt {
   }
 }
 
-export function traverse(c : TreeCursor, s : string) : Array<Stmt> {
+export function traverse(c : TreeCursor, s : string) : Program {
   switch(c.node.type.name) {
     case "Script":
       const firstChild = c.firstChild();
       const vardef = traverseVardef(c, s)
       console.log(vardef)
+      console.log(c.type.name)
       console.log("-----parse variable def complete-----")
       const funcdef = traverseFuncdef(c, s)
       console.log(funcdef)
+      console.log(c.type.name)
       console.log("-----parse function def complete-----")
       const stmts = [];
-      do {
+      while(c.nextSibling()) {
         stmts.push(traverseStmt(c, s));
-      } while(c.nextSibling())
+      }
       console.log("-------------------------------------")
       console.log(stmts)
-      return stmts;
+      return {
+        tag: "program",
+        vardef: vardef,
+        funcdef: funcdef,
+        stmt: stmts
+      };
     default:
       throw new Error("Could not parse program at " + c.node.from + " " + c.node.to);
   }
 }
 
-export function parse(source : string) : Array<Stmt> {
+export function parse(source : string) : Program {
   const t = parser.parse(source);
   return traverse(t.cursor(), source);
 }

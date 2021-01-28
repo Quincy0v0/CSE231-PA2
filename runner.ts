@@ -23,10 +23,12 @@ if(typeof process !== "undefined") {
 
 export async function run(source : string, config: any) : Promise<[any, compiler.GlobalEnv]> {
   const wabtInterface = await wabt();
-  const parsed = parse(source);
+  const parsed = parse(source).stmt;
   var returnType = "";
+  var retVal = "";
   if(parsed[parsed.length - 1].tag === "expr") {
     returnType = "(result i32)";
+    retVal = "(local.get $scratch)"
   }
   const compiled = compiler.compile(source, config.env);
   const importObject = config.importObject;
@@ -39,9 +41,11 @@ export async function run(source : string, config: any) : Promise<[any, compiler
     (func $printglobal (import "imports" "print_global_func") (param i32) (param i32))
     (import "js" "memory" (memory 1))
     (func (export "exported_func") ${returnType}
-      ${compiled.wasmSource}
+    (local $scratch i32)
+      ${compiled.wasmSource} ${retVal}
     )
   )`;
+  console.log(wasmSource)
   const myModule = wabtInterface.parseWat("test.wat", wasmSource);
   var asBinary = myModule.toBinary({});
   var wasmModule = await WebAssembly.instantiate(asBinary.buffer, importObject);
