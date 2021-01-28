@@ -100,16 +100,26 @@ function codeGenUniOp(op: UniOp, left: Expr, env: GlobalEnv): Array<string> {
   var leftStmts = codeGenExpr(left, env);
   switch (op) {
     case UniOp.Not:
-      return leftStmts.concat([
-        `(i32.add )`
-      ]);
+      return [`(if (result i32)
+            (i32.lt_s` + leftStmts +
+            `
+              (i32.const 1)
+            )
+            (then
+              (i32.const 1)
+            )
+            (else
+              (i32.const 0)
+            )
+          )
+        `
+      ];
     case UniOp.Minus:
-      return leftStmts.concat([
-        `(i32.add )`
-      ]);
+      return [`(i32.const 0)`].concat(leftStmts.concat([
+        `(i32.sub )`
+      ]));
   }
 }
-
 function codeGenBinOp(op: BinOp, left: Expr, right: Expr, env: GlobalEnv): Array<string> {
   var leftStmts = codeGenExpr(left, env);
   var rightStmts = codeGenExpr(right, env);

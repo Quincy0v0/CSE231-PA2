@@ -1,6 +1,6 @@
 const python = require('lezer-python');
 
-const input = "while (1==1):";
+const input = "not False";
 
 const tree = python.parser.parse(input);
 

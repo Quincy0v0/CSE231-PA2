@@ -41,8 +41,14 @@ export function getBinOp(opstr : string) : BinOp {
 }
 
 export function traverseExpr(c : TreeCursor, s : string) : Expr {
+  console.log(c.type.name)
   switch(c.type.name) {
     case "Number":
+      return {
+        tag: "lit",
+        value: traverseLitr(c, s)
+      }
+    case "Boolean":
       return {
         tag: "lit",
         value: traverseLitr(c, s)
@@ -59,14 +65,14 @@ export function traverseExpr(c : TreeCursor, s : string) : Expr {
       }
     case "UnaryExpression":
       c.firstChild();
-      const uleft = traverseExpr(c, s);
-      c.nextSibling(); // Here we would look at this value to get the operator
       const uopstr = s.substring(c.from, c.to);
+      c.nextSibling(); // Here we would look at this value to get the operator
+      const variable = traverseExpr(c, s);
       c.parent();
       return {
         tag: "uniop",
         op: getUniOp(uopstr),
-        left: uleft,
+        left: variable,
       }
     case "BinaryExpression":
       c.firstChild();
