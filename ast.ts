@@ -4,17 +4,27 @@ export type Typed_var = { tag: "typedvar", name: string, type: Type }
 
 export type Func_def = { tag: "funcdef", name: string, parameters: Array<Typed_var>, return: Type , body: Func_body  }
 
-export type Func_body = { tag: "funcbody", def: Var_def, body: Array<Stmt> }
+export type Func_body = { tag: "funcbody", def: Array<Var_def>, body: Array<Stmt> }
 
 export type Stmt =
     { tag: "define", name: string, value: Expr }
-  | { tag: "if", expr: Expr,  }
+  | { tag: "if", expr: Expr, body: Array<Stmt>, elif: Elif, else: Else }
   | { tag: "while", expr: Expr, body: Array<Stmt> }
   | { tag: "pass" }
   | { tag: "return", value: Expr }
   | { tag: "expr", value: Expr }
-  | { tag: "print", value: Expr}
-  | { tag: "globals"}
+  | { tag: "print", value: Expr }
+  | { tag: "globals" }
+  | { tag: "funcdefstmt", value: Func_def }
+  | { tag: "vardefstmt", value: Var_def }
+
+export type Elif =
+    { tag: "elif", expr: Expr, body: Array<Stmt> }
+  | { tag: "noelif"}
+
+export type Else =
+    { tag: "else", body: Array<Stmt> }
+  | { tag: "noelse"}
 
 export type Expr =
     { tag: "lit", value: Literal }
@@ -32,6 +42,6 @@ export type Literal =
 
 export enum UniOp { Not, Minus };
 
-export enum BinOp { Plus, Minus, Mult, Div, Mod, Equal, Noteq, Smeq, Lgeq, Sm, Lg, Is};
+export enum BinOp { Plus, Minus, Mult, Div, Mod, Equal, Noteq, Smeq, Lgeq, Sm, Lg, Is };
 
 export enum Type { Int, Bool };

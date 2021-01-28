@@ -1,13 +1,47 @@
 const python = require('lezer-python');
 
-const input = "not False";
+const input = `a:int = 1
+b:int = 3
+c:int = 4
+def is_even(x:int) -> bool:
+    if x % 2 == 1:
+        return False
+    elif x % 2 == -1:
+        return False
+    else:
+        return True
+
+def is_add(x:int) -> bool:
+    if x % 2 == 1:
+        return False
+    elif x % 2 == -1:
+        return False
+    else:
+        return True`;
 
 const tree = python.parser.parse(input);
 
 const cursor = tree.cursor();
 
+cursor.firstChild()
 do {
-//  console.log(cursor.node);
-  console.log(cursor.node.type.name);
-  console.log(input.substring(cursor.node.from, cursor.node.to));
-} while(cursor.next());
+//console.log(cursor.node);
+  console.log("-------------------------");
+  console.log(cursor.type.name);
+
+  cursor.firstChild()
+  do {
+  //console.log(cursor.node);
+    console.log("--------");
+    console.log(cursor.type.name);
+  } while(cursor.nextSibling());
+  cursor.parent()
+} while(cursor.nextSibling());
+
+
+//do {
+//console.log(cursor.node);
+//  console.log("--------");
+//  console.log(cursor.node.type.name);
+//  console.log(input.substring(cursor.node.from, cursor.node.to));
+//} while(cursor.next());
