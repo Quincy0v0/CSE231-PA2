@@ -1,10 +1,6 @@
 const python = require('lezer-python');
 
-const input = `
-def loop(x:int) -> bool:
-    while True:
-        print(1)
-    `
+const input = `f(1)`
 const tree = python.parser.parse(input);
 const cursor = tree.cursor();
 

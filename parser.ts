@@ -90,10 +90,28 @@ export function traverseExpr(c : TreeCursor, s : string) : Expr {
         name: s.substring(c.from, c.to)
       }
     case "CallExpression":
+      c.firstChild() // focus on variable name
+      let callName = s.substring(c.from, c.to);
+      console.log(callName)
+      c.nextSibling(); // go to arglist
+      console.log(c.type.name, s.substring(c.from, c.to))
+      c.firstChild(); // go into arglist, focus on (
+      console.log(c.type.name, s.substring(c.from, c.to))
+      c.nextSibling(); // focus on arg1
+      console.log(c.type.name, s.substring(c.from, c.to))
+      const args: Array<Expr> = []
+      do {
+        args.push(traverseExpr(c, s));
+        c.nextSibling();
+      } while(c.nextSibling())
+      console.log("args ready", args)
+      c.parent(); // pop arglist
+      c.parent(); // pop expressionstmt
       return {
-        tag: "lit",
-        value: traverseLitr(c, s)
-      }
+        tag: "call",
+        name: callName,
+        arguments: args
+      };
     case "UnaryExpression":
       c.firstChild();
       const uopstr = s.substring(c.from, c.to);
@@ -118,6 +136,16 @@ export function traverseExpr(c : TreeCursor, s : string) : Expr {
         op: getBinOp(opstr),
         left: left,
         right: right
+      }
+    case "ParenthesizedExpression":
+      c.firstChild(); // focus on '('
+      c.nextSibling(); // focus on expr
+      const pexpr = traverseExpr(c, s);
+      c.nextSibling();// focus on ')'
+      c.parent();
+      return {
+        tag: "parentheses",
+        expr: pexpr,
       }
     default:
       throw new Error("Could not parse expr at " + c.from + " " + c.to + ": " + s.substring(c.from, c.to));
@@ -275,38 +303,12 @@ export function traverseStmt(c : TreeCursor, s : string) : Stmt {
         value: value
       }
     case "ExpressionStatement":
-      c.firstChild();
-      let childName = c.node.type.name;
-      if((childName as any) === "CallExpression") { // Note(Joe): hacking around typescript here; it doesn't know about state
-        c.firstChild();
-        const callName = s.substring(c.from, c.to);
-        if (callName === "globals") {
-          c.parent();
-          c.parent();
-          return {
-            tag: "globals"
-          };
-        } else if (callName === "print") {
-          c.nextSibling(); // go to arglist
-          c.firstChild(); // go into arglist
-          c.nextSibling(); // find single argument in arglist
-          const arg = traverseExpr(c, s);
-          c.parent(); // pop arglist
-          c.parent(); // pop expressionstmt
-          return {
-            tag: "print",
-            // LOL TODO: not this
-            value: arg
-          };
-        }
-      }
-      else {
-        const expr = traverseExpr(c, s);
-        c.parent(); // pop going into stmt
-        return {
-          tag: "expr",
-          value: expr
-        }
+      c.firstChild(); // focus on CallExpression
+      const expr = traverseExpr(c, s);
+      c.parent(); // pop going into stmt
+      return {
+        tag: "expr",
+        value: expr
       }
     case "FunctionDefinition":
       throw new Error("Could not parse stmt at " + c.node.from + " " + c.node.to + ": " + s.substring(c.from, c.to));
@@ -354,7 +356,7 @@ export function traverseStmt(c : TreeCursor, s : string) : Stmt {
       return {
         tag: "while",
         expr: whileexpr,
-        body: whilebody 
+        body: whilebody
       }
     case "PassStatement":
       return {
@@ -383,8 +385,7 @@ export function traverse(c : TreeCursor, s : string) : Array<Stmt> {
       console.log("-----parse function def complete-----")
       const stmts = [];
       do {
-        let ps:Stmt = { tag: "pass" }
-        stmts.push(ps)//traverseStmt(c, s));
+        stmts.push(traverseStmt(c, s));
       } while(c.nextSibling())
       console.log("-------------------------------------")
       console.log(stmts)

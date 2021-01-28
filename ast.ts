@@ -15,7 +15,6 @@ export type Stmt =
   | { tag: "expr", value: Expr }
   | { tag: "print", value: Expr }
   | { tag: "globals" }
-  | { tag: "funcdefstmt", value: Func_def }
   | { tag: "vardefstmt", value: Var_def }
 
 export type Elif =
