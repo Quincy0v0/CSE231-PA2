@@ -30,6 +30,7 @@ export function augmentEnv(env: GlobalEnv, stmts: Array<Stmt>) : GlobalEnv {
 }
 
 type CompileResult = {
+  funcSource: string,
   wasmSource: string,
   newEnv: GlobalEnv
 };
@@ -41,15 +42,16 @@ export function compile(source: string, env: GlobalEnv) : CompileResult {
   const ast_stmt = prog.stmt;
   const withDefines = augmentEnv(env, ast_stmt);
   let commandGroups = ast_func.map((func) => codeGenFunc(func, withDefines));
-  let commands = [].concat.apply([], commandGroups);
+  let commands_func = [].concat.apply([], commandGroups);
 
 
   commandGroups = ast_stmt.map((stmt) => codeGen(stmt, withDefines));
-  commands = commands.concat.apply([], commandGroups);
+  let commands_stmt = [].concat.apply([],commandGroups);
 
-  console.log("Generated: ", commands.join("\n"));
+  //console.log("Generated: ", commands.join("\n"));
   return {
-    wasmSource: commands.join("\n"),
+    funcSource: commands_func.join("\n"),
+    wasmSource: commands_stmt.join("\n"),
     newEnv: withDefines
   };
 }
@@ -109,6 +111,9 @@ function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
       return ["(call $print)"]
     case "if":
       return ["(call $print)"]
+    case "return":
+      let val = codeGenExpr(stmt.value, env);
+      return val;
     case "expr":
       const result = codeGenExpr(stmt.value, env);
       result.push("(local.set $scratch)");

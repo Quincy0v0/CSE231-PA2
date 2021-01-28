@@ -40,6 +40,7 @@ export async function run(source : string, config: any) : Promise<[any, compiler
     (func $print (import "imports" "imported_func") (param i32))
     (func $printglobal (import "imports" "print_global_func") (param i32) (param i32))
     (import "js" "memory" (memory 1))
+    ${compiled.funcSource}
     (func (export "exported_func") ${returnType}
     (local $scratch i32)
       ${compiled.wasmSource} ${retVal}
