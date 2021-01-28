@@ -339,9 +339,22 @@ export function traverseStmt(c : TreeCursor, s : string) : Stmt {
         else: elsedata
       }
     case "WhileStatement":
-    // @TODO: add while loop here
+      c.firstChild(); // Focus on while
+      c.nextSibling(); // Focus on expr
+      let whileexpr = traverseExpr(c, s);
+      c.nextSibling(); // Focus on body
+      c.firstChild(); // focus on :
+      c.nextSibling(); // focus on expr
+      const whilebody: Array<Stmt> = [];
+      do {
+        whilebody.push(traverseStmt(c, s));
+      } while(c.nextSibling())
+      c.parent(); // pop back to body
+      c.parent(); // pop back to stmt
       return {
-        tag: "pass"
+        tag: "while",
+        expr: whileexpr,
+        body: whilebody 
       }
     case "PassStatement":
       return {

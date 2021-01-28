@@ -11,13 +11,10 @@ def is_even(x:int) -> bool:
     else:
         return True
 
-def is_add(x:int) -> bool:
-    if x % 2 == 1:
-        return False
-    elif x % 2 == -1:
-        return False
-    else:
-        return True`;
+def loop(x:int) -> bool:
+    while True:
+        print(1)
+    `
 
 const tree = python.parser.parse(input);
 
