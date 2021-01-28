@@ -131,43 +131,43 @@ function codeGenBinOp(op: BinOp, left: Expr, right: Expr, env: GlobalEnv): Array
       ]));
     case BinOp.Minus:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.sub )`
       ]));
     case BinOp.Mult:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.mult )`
       ]));
     case BinOp.Div:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.div_s )`
       ]));
     case BinOp.Mod:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.rem_s )`
       ]));
     case BinOp.Equal:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.eq )`
       ]));
     case BinOp.Noteq:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.ne )`
       ]));
     case BinOp.Smeq:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.le_s )`
       ]));
     case BinOp.Lgeq:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.ge_s )`
       ]));
     case BinOp.Sm:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.lt_s )`
       ]));
     case BinOp.Lg:
       return leftStmts.concat(rightStmts.concat([
-        `(i32.add )`
+        `(i32.gt_s )`
       ]));
     case BinOp.Is:
       return leftStmts.concat(rightStmts.concat([
