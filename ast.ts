@@ -17,7 +17,6 @@ export type Stmt =
   | { tag: "expr", value: Expr }
   | { tag: "print", value: Expr }
   | { tag: "globals" }
-  | { tag: "vardefstmt", value: Var_def }
 
 export type Elif =
     { tag: "elif", expr: Expr, body: Array<Stmt> }
@@ -45,4 +44,4 @@ export enum UniOp { Not, Minus };
 
 export enum BinOp { Plus, Minus, Mult, Div, Mod, Equal, Noteq, Smeq, Lgeq, Sm, Lg, Is };
 
-export enum Type { Int, Bool };
+export enum Type { Int, Bool, None };

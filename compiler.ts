@@ -52,8 +52,39 @@ function envLookup(env : GlobalEnv, name : string) : number {
   return (env.globals.get(name) * 4); // 4-byte values
 }
 
+function codeGenVar(vardef: Var_def, env: GlobalEnv) : Array<string> {
+  let varname = vardef.var.name;
+  let varval = codeGenLitr(vardef.value, env);
+  let ret = `(local $${varname})
+  (local.set $${varname} (i32.const ${varval}))`
+  return [ret]
+}
+
 function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
-  
+  let params:Array<string> = [];
+  let idx = 0;
+  funcdef.parameters.forEach(v => {
+    params.push(`(param $arg${idx} i32)`);
+    idx += 1;
+  });
+  let ret = "";
+  if (funcdef.return!=Type.None) {
+    ret = `(result i32)`
+  }
+  let body = funcdef.body;
+  let funcvar:Array<string> = []
+  body.def.forEach(element => {
+    funcvar.concat(codeGenVar(element, env));
+  });
+  let funcstmt:Array<string> = []
+  body.body.forEach(element => {
+    funcstmt.concat(codeGen(element, env));
+  })
+  let result = `(func $${funcdef.name} ${params} ${ret}
+    ${funcvar.toString()}
+    ${funcstmt.toString()}
+  )`
+  return [result]
 }
 
 function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
@@ -67,6 +98,10 @@ function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
       return valStmts.concat([
         "(call $print)"
       ]);
+    case "while":
+      return ["(call $print)"]
+    case "if":
+      return ["(call $print)"]
     case "expr":
       const result = codeGenExpr(stmt.value, env);
       result.push("(local.set $scratch)");

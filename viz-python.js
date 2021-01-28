@@ -1,8 +1,6 @@
 const python = require('lezer-python');
 
-const input = `a:int = 1
-b:int = 3
-c:int = 4`
+const input = `print(1)`
 const tree = python.parser.parse(input);
 const cursor = tree.cursor();
 

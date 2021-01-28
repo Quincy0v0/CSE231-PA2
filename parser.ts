@@ -229,9 +229,10 @@ export function traverseFuncdef(c : TreeCursor, s : string) : Array<Func_def> {
     var parameters = traverseParameters(c, s)
     c.nextSibling(); // Focus on Body or return type
     let tp = c.type.name;
+    let retType = Type.None;
     if (tp != "Body") {
       c.firstChild();  // Focus on return type
-      var retType = s.substring(c.from, c.to)=="int" ? Type.Int : Type.Bool;
+      retType = s.substring(c.from, c.to)=="int" ? Type.Int : Type.Bool;
       c.parent();
       c.nextSibling(); // Focus on Body
     }
@@ -388,9 +389,10 @@ export function traverse(c : TreeCursor, s : string) : Program {
       console.log(c.type.name)
       console.log("-----parse function def complete-----")
       const stmts = [];
-      while(c.nextSibling()) {
+      console.log(c.type.name)
+      do {
         stmts.push(traverseStmt(c, s));
-      }
+      } while(c.nextSibling())
       console.log("-------------------------------------")
       console.log(stmts)
       return {
