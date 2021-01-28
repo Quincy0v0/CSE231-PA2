@@ -36,10 +36,17 @@ type CompileResult = {
 
 export function compile(source: string, env: GlobalEnv) : CompileResult {
   const prog = parse(source)
-  const ast = prog.stmt; // Program returned here
-  const withDefines = augmentEnv(env, ast);
-  const commandGroups = ast.map((stmt) => codeGen(stmt, withDefines));
-  const commands = [].concat.apply([], commandGroups);
+  const ast_var = prog.vardef;
+  const ast_func = prog.funcdef;
+  const ast_stmt = prog.stmt;
+  const withDefines = augmentEnv(env, ast_stmt);
+  let commandGroups = ast_func.map((func) => codeGenFunc(func, withDefines));
+  let commands = [].concat.apply([], commandGroups);
+
+
+  commandGroups = ast_stmt.map((stmt) => codeGen(stmt, withDefines));
+  commands = commands.concat.apply([], commandGroups);
+
   console.log("Generated: ", commands.join("\n"));
   return {
     wasmSource: commands.join("\n"),
@@ -74,11 +81,11 @@ function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
   let body = funcdef.body;
   let funcvar:Array<string> = []
   body.def.forEach(element => {
-    funcvar.concat(codeGenVar(element, env));
+    funcvar = funcvar.concat(codeGenVar(element, env));
   });
   let funcstmt:Array<string> = []
   body.body.forEach(element => {
-    funcstmt.concat(codeGen(element, env));
+    funcstmt = funcstmt.concat(codeGen(element, env));
   })
   let result = `(func $${funcdef.name} ${params} ${ret}
     ${funcvar.toString()}
