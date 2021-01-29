@@ -260,7 +260,7 @@ function typeCheckBinOp(op: BinOp, left: Expr, right: Expr) {
   let types = ["Int", "Bool", "None"]
   let ltype = getExprType(left);
   let rtype =  getExprType(right)
-  if (ltype != rtype) {
+  if (ltype != rtype && left.tag == right.tag) {
     throw new Error("Cannot apply operator " + symbols[op] + " " + "on types " + types[ltype] + " and " + types[rtype]);
   }
 }
