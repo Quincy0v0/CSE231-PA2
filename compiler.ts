@@ -32,7 +32,6 @@ export function augmentEnv(env: GlobalEnv, stmts: Array<Stmt>) : GlobalEnv {
 export function augmentEnvVar(env: GlobalEnv, vardef: Array<Var_def>) : GlobalEnv {
   const newEnv = new Map(env.globals);
   var newOffset = env.offset;
-  console.log("augemented env - vardef", vardef)
   vardef.forEach((v) => {
     newEnv.set(v.var.name, newOffset);
     newOffset += 1;
@@ -47,10 +46,17 @@ export function augmentEnvVar(env: GlobalEnv, vardef: Array<Var_def>) : GlobalEn
 export function augmentEnvFunc(env: GlobalEnv, funcdef: Array<Func_def>) : GlobalEnv {
   const newEnv = new Map(env.globals);
   let newOffset = env.offset;
-  console.log("augemented env - funcdef", funcdef)
-  funcdef.forEach((v) => {
-    newEnv.set(v.name, newOffset);
-    newOffset += 1;
+  funcdef.forEach((f) => {
+    // add parameters
+    f.parameters.forEach((v) => {
+      newEnv.set(v.name, newOffset);
+      newOffset += 1;
+    });
+    // add function local variables
+    f.body.def.forEach((v) => {
+      newEnv.set(v.var.name, newOffset);
+      newOffset += 1;
+    });
   })
   console.log("augemented env - func", newEnv)
   return {
@@ -102,7 +108,7 @@ function envLookup(env : GlobalEnv, name : string) : number {
 function codeGenVar(vardef: Var_def, env: GlobalEnv) : Array<string> {
   let varname = vardef.var.name;
   let varval = codeGenLitr(vardef.value, env);
-  const locationToStore = [`(i32.const ${envLookup(env, varname)}) ;; ${varname}`];
+  const locationToStore = [`(i32.const ${envLookup(env, varname)})`];
   return locationToStore.concat(varval).concat([`(i32.store)`]);
 }
 
@@ -136,7 +142,7 @@ function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
 function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
   switch(stmt.tag) {
     case "define":
-      const locationToStore = [`(i32.const ${envLookup(env, stmt.name)}) ;; ${stmt.name}`];
+      const locationToStore = [`(i32.const ${envLookup(env, stmt.name)})`];
       var valStmts = codeGenExpr(stmt.value, env);
       return locationToStore.concat(valStmts).concat([`(i32.store)`]);
     case "print":
