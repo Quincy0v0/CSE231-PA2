@@ -247,10 +247,28 @@ function codeGenUniOp(op: UniOp, left: Expr, env: GlobalEnv): Array<string> {
       ]));
   }
 }
+
+function getExprType(expr: Expr): Type {
+  switch(expr.tag) {
+    case "lit":
+      return expr.value.type;
+  }
+}
+
+function typeCheckBinOp(op: BinOp, left: Expr, right: Expr) {
+  let symbols = ["+", "-", "*", "//", "%", "==", "!=", "<=", ">=", "<", ">", "is"]
+  let types = ["Int", "Bool", "None"]
+  let ltype = getExprType(left);
+  let rtype =  getExprType(right)
+  if (ltype != rtype) {
+    throw new Error("Cannot apply operator " + symbols[op] + " " + "on types " + types[ltype] + " and " + types[rtype]);
+  }
+}
+
 function codeGenBinOp(op: BinOp, left: Expr, right: Expr, env: GlobalEnv): Array<string> {
   var leftStmts = codeGenExpr(left, env);
   var rightStmts = codeGenExpr(right, env);
-
+  typeCheckBinOp(op, left, right)
   switch (op) {
     case BinOp.Plus:
       return leftStmts.concat(rightStmts.concat([

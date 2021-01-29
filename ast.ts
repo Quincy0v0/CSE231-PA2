@@ -35,10 +35,10 @@ export type Expr =
   | { tag: "call", name: string, arguments: Array<Expr> }
 
 export type Literal =
-    { tag: "none" }
-  | { tag: "true" }
-  | { tag: "false" }
-  | { tag: "num", value: number }
+    { tag: "none", type: Type }
+  | { tag: "true", type: Type }
+  | { tag: "false", type: Type }
+  | { tag: "num", value: number, type: Type }
 
 export enum UniOp { Not, Minus };
 

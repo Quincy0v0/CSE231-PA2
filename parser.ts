@@ -157,20 +157,24 @@ function traverseLitr(c : TreeCursor, s : string) : Literal {
     case "Number":
       return {
         tag: "num",
-        value: Number(s.substring(c.from, c.to))
+        value: Number(s.substring(c.from, c.to)),
+        type: Type.Int
       }
     case "None":
       return {
-        tag: "none"
+        tag: "none",
+        type: Type.None
       }
     case "Boolean":
       if (s.substring(c.from, c.to) === "True") {
         return {
-          tag: "true"
+          tag: "true",
+          type: Type.Bool
         }
       } else {
         return {
-          tag: "false"
+          tag: "false",
+          type: Type.Bool
         }
       }
     default:
