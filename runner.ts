@@ -43,6 +43,7 @@ export async function run(source : string, config: any) : Promise<[any, compiler
     ${compiled.funcSource}
     (func (export "exported_func") ${returnType}
     (local $scratch i32)
+    ${compiled.varSource}
       ${compiled.wasmSource} ${retVal}
     )
   )`;

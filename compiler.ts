@@ -29,7 +29,38 @@ export function augmentEnv(env: GlobalEnv, stmts: Array<Stmt>) : GlobalEnv {
   }
 }
 
+export function augmentEnvVar(env: GlobalEnv, vardef: Array<Var_def>) : GlobalEnv {
+  const newEnv = new Map(env.globals);
+  var newOffset = env.offset;
+  console.log("augemented env - vardef", vardef)
+  vardef.forEach((v) => {
+    newEnv.set(v.var.name, newOffset);
+    newOffset += 1;
+  })
+  console.log("augemented env - var", newEnv)
+  return {
+    globals: newEnv,
+    offset: newOffset
+  }
+}
+
+export function augmentEnvFunc(env: GlobalEnv, funcdef: Array<Func_def>) : GlobalEnv {
+  const newEnv = new Map(env.globals);
+  let newOffset = env.offset;
+  console.log("augemented env - funcdef", funcdef)
+  funcdef.forEach((v) => {
+    newEnv.set(v.name, newOffset);
+    newOffset += 1;
+  })
+  console.log("augemented env - func", newEnv)
+  return {
+    globals: newEnv,
+    offset: newOffset
+  }
+}
+
 type CompileResult = {
+  varSource: string,
   funcSource: string,
   wasmSource: string,
   newEnv: GlobalEnv
@@ -40,16 +71,23 @@ export function compile(source: string, env: GlobalEnv) : CompileResult {
   const ast_var = prog.vardef;
   const ast_func = prog.funcdef;
   const ast_stmt = prog.stmt;
-  const withDefines = augmentEnv(env, ast_stmt);
+  let withDefines = augmentEnvVar(env, ast_var);
+  withDefines = augmentEnvFunc(withDefines, ast_func);
+  withDefines = augmentEnv(withDefines, ast_stmt);
+  console.log("global env =", withDefines)
+
   let commandGroups = ast_func.map((func) => codeGenFunc(func, withDefines));
   let commands_func = [].concat.apply([], commandGroups);
-
 
   commandGroups = ast_stmt.map((stmt) => codeGen(stmt, withDefines));
   let commands_stmt = [].concat.apply([],commandGroups);
 
+  commandGroups = ast_var.map((elem) => codeGenVar(elem, withDefines));
+  let commands_var = [].concat.apply([],commandGroups);
+
   //console.log("Generated: ", commands.join("\n"));
   return {
+    varSource: commands_var.join("\n"),
     funcSource: commands_func.join("\n"),
     wasmSource: commands_stmt.join("\n"),
     newEnv: withDefines
@@ -64,9 +102,8 @@ function envLookup(env : GlobalEnv, name : string) : number {
 function codeGenVar(vardef: Var_def, env: GlobalEnv) : Array<string> {
   let varname = vardef.var.name;
   let varval = codeGenLitr(vardef.value, env);
-  let ret = `(local $${varname})
-  (local.set $${varname} (i32.const ${varval}))`
-  return [ret]
+  const locationToStore = [`(i32.const ${envLookup(env, varname)}) ;; ${varname}`];
+  return locationToStore.concat(varval).concat([`(i32.store)`]);
 }
 
 function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
@@ -90,8 +127,8 @@ function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
     funcstmt = funcstmt.concat(codeGen(element, env));
   })
   let result = `(func $${funcdef.name} ${params} ${ret}
-    ${funcvar.toString()}
-    ${funcstmt.toString()}
+    ${funcvar.join("")}
+    ${funcstmt.join("")}
   )`
   return [result]
 }
@@ -108,16 +145,23 @@ function codeGen(stmt: Stmt, env: GlobalEnv) : Array<string> {
         "(call $print)"
       ]);
     case "while":
-      return ["(call $print)"]
+      let while_body:Array<string> = [];
+      let while_expr = codeGenExpr(stmt.expr, env);
+      stmt.body.forEach((b) => {
+        while_body = while_body.concat(codeGen(b, env));
+      });
+      return [`(block
+      (loop
+        ${while_body.join("")}
+      (br_if 1 ${while_expr.join("")})
+      (br 0)))`]
     case "if":
       return ["(call $print)"]
     case "return":
       let val = codeGenExpr(stmt.value, env);
       return val;
     case "expr":
-      const result = codeGenExpr(stmt.value, env);
-      result.push("(local.set $scratch)");
-      return result;
+      return codeGenExpr(stmt.value, env).concat(["(local.set $scratch)"]);
     case "globals":
       var globalStmts : Array<string> = [];
       env.globals.forEach((pos, name) => {
