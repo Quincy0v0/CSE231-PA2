@@ -48,8 +48,8 @@ export function augmentEnvFunc(env: GlobalEnv, funcdef: Array<Func_def>) : Globa
   let newOffset = env.offset;
   funcdef.forEach((f) => {
     // add parameters
-    f.parameters.forEach((v) => {
-      newEnv.set(v.name, newOffset);
+    f.parameters.forEach((v, idx) => {
+      newEnv.set(f.name+'param'+idx, newOffset);
       newOffset += 1;
     });
     // add function local variables
@@ -112,6 +112,12 @@ function codeGenVar(vardef: Var_def, env: GlobalEnv) : Array<string> {
   return locationToStore.concat(varval).concat([`(i32.store)`]);
 }
 
+function codeGenParam(val: Array<string>, name: string, idx:number, env: GlobalEnv) : Array<string> {
+  let varname = name+'param'+idx;
+  const locationToStore = [`(i32.const ${envLookup(env, varname)})`];
+  return locationToStore.concat(val).concat([`(i32.store)`]);
+}
+
 function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
   let params:Array<string> = [];
   let idx = 0;
@@ -125,6 +131,7 @@ function codeGenFunc(funcdef: Func_def, env: GlobalEnv) : Array<string> {
   }
   let body = funcdef.body;
   let funcvar:Array<string> = []
+  // add parameters here
   body.def.forEach(element => {
     funcvar = funcvar.concat(codeGenVar(element, env));
   });
@@ -194,8 +201,9 @@ function codeGenExpr(expr : Expr, env: GlobalEnv) : Array<string> {
       return codeGenBinOp(expr.op, expr.left, expr.right, env);
     case "call":
       var valStmts = codeGenExpr(expr.arguments[0], env);
+      let param = codeGenParam(valStmts, expr.name, 0, env);
       valStmts.push(`(call $${expr.name})`);
-      return valStmts;
+      return param.concat(valStmts);
   }
 }
 
